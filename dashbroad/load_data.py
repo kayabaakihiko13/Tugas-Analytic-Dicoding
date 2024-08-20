@@ -45,7 +45,7 @@ class CleanData:
         self.df = self.load_data()
 
     @staticmethod
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def load_data():
         BASE_URL = "https://raw.githubusercontent.com/kayabaakihiko13/Tugas-Analytic-Dicoding/main/PRSA_Data_20130301-20170228/"
         stations = [
@@ -87,6 +87,7 @@ class CleanData:
         
         filled_data[nan_mask] = fill_value
         return filled_data
+
     def fill_nan(self):
         variables = ["PM2.5", "PM10", "SO2", "NO2", "CO", "O3", "TEMP", "PRES", "DEWP", "RAIN", "WSPM"]
         
@@ -117,4 +118,3 @@ class CleanData:
             self.fill_nan()
             self.format_date()
         return self.df
-

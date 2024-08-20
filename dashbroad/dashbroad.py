@@ -5,6 +5,6 @@ from load_data import CleanData
 def get_clean_data():
     cleaner = CleanData()
     return cleaner.clean()
-
+st.title("Dashbroad")
 cleaned_data = get_clean_data()
-st.dataframe(cleaned_data)
+st.dataframe(cleaned_data.head())
