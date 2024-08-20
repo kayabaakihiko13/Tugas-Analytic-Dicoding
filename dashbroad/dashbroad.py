@@ -1,4 +1,5 @@
 import streamlit as st
-from load_data import load_data
+from load_data import CleanData
 st.title("Dashbroad")
-st.dataframe(load_data().head())
+data_clean = CleanData().clean()
+st.dataframe(data_clean)

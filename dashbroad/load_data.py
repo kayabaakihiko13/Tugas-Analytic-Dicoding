@@ -1,40 +1,73 @@
 import pandas as pd
 import requests
 from io import StringIO
+import warnings
+from scipy import stats
+import numpy as np
 
-def load_data():
-    BASE_URL = "https://raw.githubusercontent.com/kayabaakihiko13/Tugas-Analytic-Dicoding/main/PRSA_Data_20130301-20170228/"
-    file_names = [
-        "PRSA_Data_Aotizhongxin_20130301-20170228.csv",
-        "PRSA_Data_Changping_20130301-20170228.csv",
-        "PRSA_Data_Dingling_20130301-20170228.csv",
-        "PRSA_Data_Dongsi_20130301-20170228.csv",
-        "PRSA_Data_Guanyuan_20130301-20170228.csv",
-        "PRSA_Data_Gucheng_20130301-20170228.csv",
-        "PRSA_Data_Huairou_20130301-20170228.csv",
-        "PRSA_Data_Nongzhanguan_20130301-20170228.csv",
-        "PRSA_Data_Shunyi_20130301-20170228.csv",
-        "PRSA_Data_Tiantan_20130301-20170228.csv",
-        "PRSA_Data_Wanliu_20130301-20170228.csv",
-        "PRSA_Data_Wanshouxigong_20130301-20170228.csv"
-    ]
+warnings.filterwarnings("ignore")
 
-    dataframes = []
+class CleanData:
+    def __init__(self):
+        self.df = self.__load_data()
 
-    for file_name in file_names:
-        url = BASE_URL + file_name
-        response = requests.get(url)
+    def __load_data(self):
+        BASE_URL = "https://raw.githubusercontent.com/kayabaakihiko13/Tugas-Analytic-Dicoding/main/PRSA_Data_20130301-20170228/"
+        stations = [
+            "Aotizhongxin", "Changping", "Dingling", "Dongsi", "Guanyuan",
+            "Gucheng", "Huairou", "Nongzhanguan", "Shunyi", "Tiantan",
+            "Wanliu", "Wanshouxigong"
+        ]
+
+        dataframes = []
+
+        for station in stations:
+            url = f"{BASE_URL}PRSA_Data_{station}_20130301-20170228.csv"
+            try:
+                df = pd.read_csv(url)
+                dataframes.append(df)
+            except Exception as e:
+                print(f"Failed to retrieve data for {station}: {e}")
+
+        if not dataframes:
+            raise ValueError("No CSV files were successfully retrieved")
+
+        return pd.concat(dataframes, ignore_index=True)
+
+    def __fill_nan(self):
+        variables = ["PM2.5", "PM10", "SO2", "NO2", "CO", "O3", "TEMP", "PRES", "DEWP", "RAIN", "WSPM"]
         
-        if response.status_code == 200:
-            csv_content = StringIO(response.text)
-            df = pd.read_csv(csv_content)
-            dataframes.append(df)
-        else:
-            print(f"Failed to retrieve {file_name}")
+        for station in self.df["station"].unique():
+            station_data = self.df[self.df['station'] == station]
+            
+            for variable in variables:
+                non_nan_data = station_data[variable].dropna()
+                
+                if len(non_nan_data) > 1:
+                    _, p_value = stats.ttest_1samp(non_nan_data, station_data[variable].mean())
+                    
+                    fill_value = station_data[variable].mean() if p_value < 0.005 else station_data[variable].median()
+                else:
+                    fill_value = station_data[variable].median()
+                
+                self.df.loc[(self.df['station'] == station) & self.df[variable].isna(), variable] = fill_value
+        
+        return self.df
 
-    if not dataframes:
-        raise ValueError("No CSV files were successfully retrieved")
+    def __format_date(self):
+        self.df['date'] = pd.to_datetime(
+            self.df['year'].astype(str) + '-' +
+            self.df['month'].astype(str).str.zfill(2) + '-' +
+            self.df['day'].astype(str).str.zfill(2) + ' ' +
+            self.df['hour'].astype(str).str.zfill(2) + ':00:00'
+        )
+        
+        columns = ['date'] + [col for col in self.df.columns if col != 'date']
+        self.df = self.df[columns]
+        
+        return self.df
 
-    df_merge = pd.concat(dataframes, ignore_index=True)
-
-    return df_merge
+    def clean(self):
+        self.__fill_nan()
+        self.__format_date()
+        return self.df
