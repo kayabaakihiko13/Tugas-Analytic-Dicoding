@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 def load_data():
-    FOLDER_PATH = "../PRSA_Data_20130301-20170228"
+    FOLDER_PATH = "../PRSA_Data_20130301-20170228/"
     csv_files = glob.glob(os.path.join(FOLDER_PATH, '*.csv'))
 
     # Periksa apakah ada file yang ditemukan
