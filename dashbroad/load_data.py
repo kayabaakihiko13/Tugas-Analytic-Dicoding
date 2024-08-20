@@ -1,16 +1,51 @@
+import streamlit as st
 import pandas as pd
-import requests
 import numpy as np
-import warnings
 from numba import jit
-from scipy import stats
+import requests
+import warnings
+import math
 
 warnings.filterwarnings("ignore")
+
+@jit(nopython=True)
+def t_cdf(t, df):
+    x = df / (t**2 + df)
+    return 1.0 - 0.5 * betainc(0.5*df, 0.5, x)
+
+@jit(nopython=True)
+def betainc(a, b, x):
+    if x < 0 or x > 1:
+        return 0.0
+    
+    if x == 0 or x == 1:
+        return x
+    
+    lbeta = math.lgamma(a+b) - math.lgamma(a) - math.lgamma(b)
+    front = math.exp(math.log(x)*a + math.log(1-x)*b - lbeta) / a
+    
+    f = 1.0
+    c = 1.0
+    d = 0.0
+    
+    for i in range(200):
+        temp = -(a+i) * (a+b+i) * x / ((a+2*i) * (a+2*i+1))
+        d = 1.0 + temp * d
+        if abs(d) < 1e-30:
+            d = 1e-30
+        c = 1.0 + temp / c
+        d = 1.0 / d
+        f *= d * c
+        if abs(d*c - 1.0) < 1e-8:
+            return front * (f - 1.0)
+    
+    return front * (f - 1.0)
 
 class CleanData:
     def __init__(self):
         self.df = self.__load_data()
 
+    @st.cache_data
     def __load_data(self):
         BASE_URL = "https://raw.githubusercontent.com/kayabaakihiko13/Tugas-Analytic-Dicoding/main/PRSA_Data_20130301-20170228/"
         stations = [
@@ -27,7 +62,7 @@ class CleanData:
                 df = pd.read_csv(url)
                 dataframes.append(df)
             except Exception as e:
-                print(f"Failed to retrieve data for {station}: {e}")
+                st.warning(f"Failed to retrieve data for {station}: {e}")
 
         if not dataframes:
             raise ValueError("No CSV files were successfully retrieved")
@@ -44,7 +79,7 @@ class CleanData:
             mean = np.mean(non_nan_data)
             std = np.std(non_nan_data)
             t_stat = (mean - np.mean(non_nan_data)) / (std / np.sqrt(len(non_nan_data)))
-            p_value = 2 * (1 - stats.t.cdf(abs(t_stat), len(non_nan_data) - 1))
+            p_value = 2 * (1 - t_cdf(abs(t_stat), len(non_nan_data) - 1))
             
             fill_value = mean if p_value < 0.005 else np.median(non_nan_data)
         else:
@@ -79,6 +114,7 @@ class CleanData:
         return self.df
 
     def clean(self):
-        self.fill_nan()
-        self.format_date()
+        with st.spinner('Cleaning data...'):
+            self.fill_nan()
+            self.format_date()
         return self.df
