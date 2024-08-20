@@ -1,11 +1,10 @@
-import streamlit as st
 import pandas as pd
 import numpy as np
 from numba import jit
 import requests
 import warnings
 import math
-
+import streamlit as st
 warnings.filterwarnings("ignore")
 
 @jit(nopython=True)
@@ -43,10 +42,11 @@ def betainc(a, b, x):
 
 class CleanData:
     def __init__(self):
-        self.df = self.__load_data()
+        self.df = self.load_data()
 
+    @staticmethod
     @st.cache_data
-    def __load_data(self):
+    def load_data():
         BASE_URL = "https://raw.githubusercontent.com/kayabaakihiko13/Tugas-Analytic-Dicoding/main/PRSA_Data_20130301-20170228/"
         stations = [
             "Aotizhongxin", "Changping", "Dingling", "Dongsi", "Guanyuan",
@@ -87,7 +87,6 @@ class CleanData:
         
         filled_data[nan_mask] = fill_value
         return filled_data
-
     def fill_nan(self):
         variables = ["PM2.5", "PM10", "SO2", "NO2", "CO", "O3", "TEMP", "PRES", "DEWP", "RAIN", "WSPM"]
         
@@ -118,3 +117,4 @@ class CleanData:
             self.fill_nan()
             self.format_date()
         return self.df
+
