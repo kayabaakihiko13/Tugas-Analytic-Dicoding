@@ -48,5 +48,5 @@ pip install requirements.txt
 ```
 - lalu jalankan seperti ini
 ```sh
-streamlit run dashbroad.py
+streamlit run dashbroad_local.py
 ```

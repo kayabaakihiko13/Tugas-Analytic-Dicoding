@@ -95,33 +95,25 @@ def create_stacked_plot(df_melted):
 def create_aqi_plot(df_merge):
     median_aqi_by_station = df_merge.groupby('station')['AQI'].median().sort_values(ascending=False).reset_index()
     fig, ax = plt.subplots(figsize=(14, 8))
-    palette = sns.color_palette("RdYlGn_r", n_colors=len(median_aqi_by_station))
-    sns.barplot(x='station', y='AQI', data=median_aqi_by_station, palette=palette, ax=ax)
+    
+    # Set a consistent color for all bars
+    uniform_color = 'red'  # This is a standard blue color, but you can change it to any other color you prefer.
+    sns.barplot(x='station', y='AQI', data=median_aqi_by_station, color=uniform_color, ax=ax)
+    
     ax.set_title('Median Air Quality Index (AQI) by Station', fontsize=20, fontweight='bold', pad=20)
     ax.set_xlabel('Station', fontsize=14, fontweight='bold')
     ax.set_ylabel('Median AQI', fontsize=14, fontweight='bold')
+    
     plt.xticks(rotation=45, ha='right')
     ax.tick_params(axis='x', labelsize=10)
     ax.tick_params(axis='y', labelsize=10)
+    
     for i, v in enumerate(median_aqi_by_station['AQI']):
         ax.text(i, v + 0.5, f'{v:.1f}', ha='center', va='bottom', fontweight='bold')
+    
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.yaxis.grid(True, linestyle='--', alpha=0.7)
-    aqi_categories = [
-        (0, 50, 'Good', 'green'),
-        (51, 100, 'Moderate', 'yellow'),
-        (101, 150, 'Unhealthy for Sensitive Groups', 'orange'),
-        (151, 200, 'Unhealthy', 'red'),
-        (201, 300, 'Very Unhealthy', 'purple'),
-        (301, 500, 'Hazardous', 'maroon')
-    ]
-    for low, high, label, color in aqi_categories:
-        plt.axhline(y=high, color=color, linestyle='--', alpha=0.5)
-        plt.text(ax.get_xlim()[1], high, f' {label} ', verticalalignment='bottom', 
-                 horizontalalignment='right', color=color, fontweight='bold', fontsize=8)
-    plt.text(0.02, 0.98, 'Based on EPA AQI Scale', transform=ax.transAxes, 
-             fontsize=10, verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
     plt.tight_layout()
     return fig
 
