@@ -226,14 +226,21 @@ def visual_record_feature():
     if st.checkbox('Tampilkan data mentah'):
         st.write(daily_data[variables])
     
-    st.subheader("Analisis PM2.5 dan PM10 (2017)")
+    st.subheader("Analisis PM2.5 dan PM10 (2017) dan AQI Berdasarkan Stasiun")
+
+    # Buat dua kolom
+    col1, col2 = st.columns(2)
+
+    # Proses data dan buat plot untuk PM2.5 dan PM10
     df_melted = process_data_for_stacked_plot(data)
     fig_stacked = create_stacked_plot(df_melted)
-    st.pyplot(fig_stacked)
-    
-    st.subheader("Analisis AQI berdasarkan Stasiun")
+    with col1:
+        st.pyplot(fig_stacked)
+
+    # Buat plot untuk AQI berdasarkan stasiun
     fig_aqi = create_aqi_plot(data)
-    st.pyplot(fig_aqi)
+    with col2:
+        st.pyplot(fig_aqi)
 
 if __name__ == "__main__":
     visual_record_feature()
