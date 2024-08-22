@@ -47,7 +47,7 @@ class CleanData:
     @staticmethod
     @st.cache_data(show_spinner=False)
     def load_data():
-        BASE_URL = "PRSA_Data_20130301-20170228/"
+        BASE_URL = "../PRSA_Data_20130301-20170228/"
         stations = [
             "Aotizhongxin", "Changping", "Dingling", "Dongsi", "Guanyuan",
             "Gucheng", "Huairou", "Nongzhanguan", "Shunyi", "Tiantan",
